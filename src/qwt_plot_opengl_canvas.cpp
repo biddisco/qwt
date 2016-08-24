@@ -12,6 +12,7 @@
 #include <qevent.h>
 #include <qopenglframebufferobject.h>
 #include <qopenglpaintdevice.h>
+#include <qopenglfunctions.h>
 
 class QwtPlotOpenGLCanvas::PrivateData
 {
@@ -125,7 +126,6 @@ void QwtPlotOpenGLCanvas::paintGL()
     const bool hasFocusIndicator = 
         hasFocus() && focusIndicator() == CanvasFocusIndicator;
 
-
     if ( testPaintAttribute( QwtPlotOpenGLCanvas::BackingStore ) )
     {
         if ( d_data->fbo == NULL || d_data->fbo->size() != size() )
@@ -152,12 +152,13 @@ void QwtPlotOpenGLCanvas::paintGL()
 
         makeCurrent();
 
-        glBindTexture(GL_TEXTURE_2D, d_data->fbo->texture());
+        QOpenGLFunctions *funcs = context()->functions();
 
-        glEnable(GL_TEXTURE_2D);
+#if 1
+        funcs->glBindTexture(GL_TEXTURE_2D, d_data->fbo->texture());
+        funcs->glEnable(GL_TEXTURE_2D);
 
         glBegin(GL_QUADS);
-
         glTexCoord2f(0.0f, 0.0f);
         glVertex2f(-1.0f, -1.0f);
         glTexCoord2f(1.0f, 0.0f);
@@ -168,6 +169,35 @@ void QwtPlotOpenGLCanvas::paintGL()
         glVertex2f(-1.0f,  1.0f);
 
         glEnd();
+#endif
+#if 0
+        static const GLfloat squareVertices[] = {
+            -1.0f, -1.0f,
+            1.0f, -1.0f,
+            -1.0f,  1.0f,
+            1.0f,  1.0f,
+        };
+
+        static const GLfloat textureVertices[] = {
+            1.0f, 1.0f,
+            1.0f, 0.0f,
+            0.0f,  1.0f,
+            0.0f,  0.0f,
+        };
+
+        funcs->glBindTexture(GL_TEXTURE_2D, d_data->fbo->texture());
+        funcs->glEnable(GL_TEXTURE_2D);
+
+        funcs->glVertexAttribPointer(0, 2, GL_FLOAT, 0, 0, squareVertices);
+        funcs->glVertexAttribPointer(1, 2, GL_FLOAT, 0, 0, textureVertices);
+
+        funcs->glEnableVertexAttribArray(0);
+        funcs->glEnableVertexAttribArray(1);
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState (GL_TEXTURE_COORD_ARRAY_EXT);
+        funcs->glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+#endif
 
         if ( hasFocusIndicator )
         {
