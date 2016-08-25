@@ -112,6 +112,7 @@ void QwtPlotOpenGLCanvas::replot()
 
 void QwtPlotOpenGLCanvas::invalidateBackingStore()
 {
+    // happens for each replot -> better set a flag only
     delete d_data->fbo;
     d_data->fbo = NULL;
 }
@@ -143,16 +144,13 @@ void QwtPlotOpenGLCanvas::paintGL()
             fboFormat.setSamples( d_data->numSamples );
             fboFormat.setAttachment( QOpenGLFramebufferObject::CombinedDepthStencil );
 
-            QOpenGLFramebufferObject fbo( size(), fboFormat );
+            d_data->fbo = new QOpenGLFramebufferObject( size(), fboFormat );
 
             QOpenGLPaintDevice pd( size() );
 
             QPainter fboPainter( &pd );
             draw( &fboPainter);
             fboPainter.end();
-
-            d_data->fbo = new QOpenGLFramebufferObject( size() );
-            QOpenGLFramebufferObject::blitFramebuffer(d_data->fbo, &fbo );
         }
 
         makeCurrent();
