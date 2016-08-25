@@ -50,6 +50,8 @@ protected:
     virtual void resizeGL( int width, int height );
 
 private:
+	void init( const QSurfaceFormat & );
+
     class PrivateData;
     PrivateData *d_data;
 };

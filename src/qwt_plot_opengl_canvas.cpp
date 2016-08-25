@@ -13,6 +13,7 @@
 #include <qopenglframebufferobject.h>
 #include <qopenglpaintdevice.h>
 #include <qopenglfunctions.h>
+#include "/usr/include/GL/glext.h"
 
 class QwtPlotOpenGLCanvas::PrivateData
 {
@@ -27,6 +28,7 @@ public:
         delete fbo;
     }
 
+    int numSamples;
     QOpenGLFramebufferObject* fbo;
 };
 
@@ -42,21 +44,25 @@ QwtPlotOpenGLCanvas::QwtPlotOpenGLCanvas( QwtPlot *plot ):
     QwtPlotAbstractGLCanvas( this )
 {
     QSurfaceFormat fmt = format();
-    fmt.setSamples(4);
-    setFormat( fmt );
+    fmt.setSamples( 4 );
 
-    d_data = new PrivateData;
-#if 1
-    setAttribute( Qt::WA_OpaquePaintEvent, true );
-#endif
+    init( fmt );
 }
 
 QwtPlotOpenGLCanvas::QwtPlotOpenGLCanvas( const QSurfaceFormat &format, QwtPlot *plot ):
     QOpenGLWidget( plot ),
     QwtPlotAbstractGLCanvas( this )
 {
-    setFormat( format );
+    init( format );
+}
+
+void QwtPlotOpenGLCanvas::init( const QSurfaceFormat &format )
+{
     d_data = new PrivateData;
+    d_data->numSamples = format.samples();
+
+    setFormat( format );
+
 #if 1
     setAttribute( Qt::WA_OpaquePaintEvent, true );
 #endif
@@ -133,7 +139,7 @@ void QwtPlotOpenGLCanvas::paintGL()
             invalidateBackingStore();
 
             QOpenGLFramebufferObjectFormat fboFormat;
-            fboFormat.setSamples( 4 );
+            fboFormat.setSamples( d_data->numSamples );
             fboFormat.setAttachment( QOpenGLFramebufferObject::CombinedDepthStencil );
 
             QOpenGLFramebufferObject fbo( size(), fboFormat );
@@ -152,7 +158,7 @@ void QwtPlotOpenGLCanvas::paintGL()
 
         QOpenGLFunctions *funcs = context()->functions();
 
-#if 1
+#if 0
         funcs->glBindTexture(GL_TEXTURE_2D, d_data->fbo->texture());
         funcs->glEnable(GL_TEXTURE_2D);
 
@@ -168,33 +174,71 @@ void QwtPlotOpenGLCanvas::paintGL()
 
         glEnd();
 #endif
-#if 0
-        static const GLfloat squareVertices[] = {
-            -1.0f, -1.0f,
-            1.0f, -1.0f,
-            -1.0f,  1.0f,
-            1.0f,  1.0f,
-        };
 
-        static const GLfloat textureVertices[] = {
-            1.0f, 1.0f,
-            1.0f, 0.0f,
-            0.0f,  1.0f,
-            0.0f,  0.0f,
-        };
-
+#if 1
         funcs->glBindTexture(GL_TEXTURE_2D, d_data->fbo->texture());
         funcs->glEnable(GL_TEXTURE_2D);
 
-        funcs->glVertexAttribPointer(0, 2, GL_FLOAT, 0, 0, squareVertices);
-        funcs->glVertexAttribPointer(1, 2, GL_FLOAT, 0, 0, textureVertices);
+        glBegin(GL_TRIANGLE_STRIP);
+
+        glTexCoord2f( 0.0f, 0.0f );
+        glVertex2f( -1.0f, -1.0f ); 
+
+        glTexCoord2f(0.0f, 1.0f);
+        glVertex2f( -1.0f, 1.0f ); 
+
+        glTexCoord2f(1.0f, 1.0f);
+        glVertex2f( 1.0f, 1.0f ); 
+
+        // --
+
+        glTexCoord2f( 1.0f, 1.0f );
+        glVertex2f( 1.0f, 1.0f ); 
+
+        glTexCoord2f( 0.0f, 0.0f );
+        glVertex2f( -1.0f, -1.0f );
+
+        glTexCoord2f( 1.0f, 0.0f );
+        glVertex2f( 1.0f, -1.0f );
+
+        glEnd();
+
+        funcs->glDisable(GL_TEXTURE_2D);
+#endif
+#if 0
+        static const GLfloat targetVertices[] = {
+            -1.0f, -1.0f,
+            -1.0f, 1.0f,
+            1.0f,  1.0f,
+            1.0f,  1.0f,
+            -1.0f,  -1.0f,
+            1.0f,  -1.0f,
+        };
+
+        static const GLfloat textureVertices[] = {
+            -1.0f, -1.0f,
+            0.0f, 1.0f,
+            1.0f, 1.0f,
+            1.0f, 1.0f,
+            0.0f, 0.0f,
+            1.0f, 0.0f
+        };
 
         funcs->glEnableVertexAttribArray(0);
         funcs->glEnableVertexAttribArray(1);
 
-        glEnableClientState(GL_VERTEX_ARRAY);
+        funcs->glBindTexture(GL_TEXTURE_2D, d_data->fbo->texture());
+        funcs->glEnable(GL_TEXTURE_2D);
+
+        funcs->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, targetVertices);
+        funcs->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, textureVertices);
+
+        //glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState (GL_TEXTURE_COORD_ARRAY_EXT);
-        funcs->glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        funcs->glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
+
+        funcs->glDisableVertexAttribArray(0);
+        funcs->glDisableVertexAttribArray(1);
 #endif
 
         if ( hasFocusIndicator )
