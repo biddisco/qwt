@@ -149,18 +149,14 @@ void QwtPlotGLCanvas::paintGL()
             format.setSamples( 4 );
             format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
 
-            QGLFramebufferObject fbo( size(), format );
+            d_data->fbo = new QGLFramebufferObject( size(), format );
 
-            QPainter fboPainter( &fbo );
+            QPainter fboPainter( d_data->fbo );
             draw( &fboPainter);
             fboPainter.end();
-
-            d_data->fbo = new QGLFramebufferObject( size() );
-
-            QGLFramebufferObject::blitFramebuffer(d_data->fbo, rect, &fbo, rect);
         }
 
-		QGLFramebufferObject::blitFramebuffer( NULL, rect, d_data->fbo, rect );
+        QGLFramebufferObject::blitFramebuffer( NULL, rect, d_data->fbo, rect );
 
     }
     else
