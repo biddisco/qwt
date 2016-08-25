@@ -12,8 +12,6 @@
 #include <qevent.h>
 #include <qopenglframebufferobject.h>
 #include <qopenglpaintdevice.h>
-#include <qopenglfunctions.h>
-#include "/usr/include/GL/glext.h"
 
 class QwtPlotOpenGLCanvas::PrivateData
 {
@@ -132,8 +130,11 @@ void QwtPlotOpenGLCanvas::paintGL()
     const bool hasFocusIndicator = 
         hasFocus() && focusIndicator() == CanvasFocusIndicator;
 
-    if ( testPaintAttribute( QwtPlotOpenGLCanvas::BackingStore ) )
+    if ( testPaintAttribute( QwtPlotOpenGLCanvas::BackingStore ) &&
+        QOpenGLFramebufferObject::hasOpenGLFramebufferBlit() )
     {
+        // does this mode make any sense - QOpenGLWidget has its own internal FBO
+
         if ( d_data->fbo == NULL || d_data->fbo->size() != size() )
         {
             invalidateBackingStore();
@@ -156,90 +157,7 @@ void QwtPlotOpenGLCanvas::paintGL()
 
         makeCurrent();
 
-        QOpenGLFunctions *funcs = context()->functions();
-
-#if 0
-        funcs->glBindTexture(GL_TEXTURE_2D, d_data->fbo->texture());
-        funcs->glEnable(GL_TEXTURE_2D);
-
-        glBegin(GL_QUADS);
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex2f(-1.0f, -1.0f);
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex2f( 1.0f, -1.0f);
-        glTexCoord2f(1.0f, 1.0f);
-        glVertex2f( 1.0f,  1.0f);
-        glTexCoord2f(0.0f, 1.0f);
-        glVertex2f(-1.0f,  1.0f);
-
-        glEnd();
-#endif
-
-#if 1
-        funcs->glBindTexture(GL_TEXTURE_2D, d_data->fbo->texture());
-        funcs->glEnable(GL_TEXTURE_2D);
-
-        glBegin(GL_TRIANGLE_STRIP);
-
-        glTexCoord2f( 0.0f, 0.0f );
-        glVertex2f( -1.0f, -1.0f ); 
-
-        glTexCoord2f(0.0f, 1.0f);
-        glVertex2f( -1.0f, 1.0f ); 
-
-        glTexCoord2f(1.0f, 1.0f);
-        glVertex2f( 1.0f, 1.0f ); 
-
-        // --
-
-        glTexCoord2f( 1.0f, 1.0f );
-        glVertex2f( 1.0f, 1.0f ); 
-
-        glTexCoord2f( 0.0f, 0.0f );
-        glVertex2f( -1.0f, -1.0f );
-
-        glTexCoord2f( 1.0f, 0.0f );
-        glVertex2f( 1.0f, -1.0f );
-
-        glEnd();
-
-        funcs->glDisable(GL_TEXTURE_2D);
-#endif
-#if 0
-        static const GLfloat targetVertices[] = {
-            -1.0f, -1.0f,
-            -1.0f, 1.0f,
-            1.0f,  1.0f,
-            1.0f,  1.0f,
-            -1.0f,  -1.0f,
-            1.0f,  -1.0f,
-        };
-
-        static const GLfloat textureVertices[] = {
-            -1.0f, -1.0f,
-            0.0f, 1.0f,
-            1.0f, 1.0f,
-            1.0f, 1.0f,
-            0.0f, 0.0f,
-            1.0f, 0.0f
-        };
-
-        funcs->glEnableVertexAttribArray(0);
-        funcs->glEnableVertexAttribArray(1);
-
-        funcs->glBindTexture(GL_TEXTURE_2D, d_data->fbo->texture());
-        funcs->glEnable(GL_TEXTURE_2D);
-
-        funcs->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, targetVertices);
-        funcs->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, textureVertices);
-
-        //glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState (GL_TEXTURE_COORD_ARRAY_EXT);
-        funcs->glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
-
-        funcs->glDisableVertexAttribArray(0);
-        funcs->glDisableVertexAttribArray(1);
-#endif
+        QOpenGLFramebufferObject::blitFramebuffer( NULL, d_data->fbo );
 
         if ( hasFocusIndicator )
         {
