@@ -42,7 +42,7 @@ QwtPlotOpenGLCanvas::QwtPlotOpenGLCanvas( QwtPlot *plot ):
     QwtPlotAbstractGLCanvas( this )
 {
     QSurfaceFormat fmt = format();
-    fmt.setSamples(16);
+    fmt.setSamples(4);
     setFormat( fmt );
 
     d_data = new PrivateData;
@@ -132,13 +132,11 @@ void QwtPlotOpenGLCanvas::paintGL()
         {
             invalidateBackingStore();
 
-            const int numSamples = 16;
+            QOpenGLFramebufferObjectFormat fboFormat;
+            fboFormat.setSamples( 4 );
+            fboFormat.setAttachment( QOpenGLFramebufferObject::CombinedDepthStencil );
 
-            QOpenGLFramebufferObjectFormat format;
-            format.setSamples( numSamples );
-            format.setAttachment( QOpenGLFramebufferObject::CombinedDepthStencil );
-
-            QOpenGLFramebufferObject fbo( size(), format );
+            QOpenGLFramebufferObject fbo( size(), fboFormat );
 
             QOpenGLPaintDevice pd( size() );
 

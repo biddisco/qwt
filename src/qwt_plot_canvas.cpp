@@ -391,7 +391,7 @@ QPainterPath QwtPlotCanvas::borderPath( const QRect &rect ) const
 
 QImage QwtPlotCanvas::toImageFBO( const QSize &size ) 
 {
-    const int numSamples = 16;
+    const int numSamples = 4;
 
 #if FBO_OPENGL
 

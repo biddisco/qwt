@@ -140,10 +140,8 @@ void QwtPlotGLCanvas::paintGL()
         {
             invalidateBackingStore();
 
-            const int numSamples = 16;
-
             QGLFramebufferObjectFormat format;
-            format.setSamples( numSamples );
+            format.setSamples( 4 );
             format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
 
             QGLFramebufferObject fbo( size(), format );
