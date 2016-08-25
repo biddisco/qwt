@@ -136,6 +136,11 @@ void QwtPlotGLCanvas::paintGL()
 #else
     if ( testPaintAttribute( QwtPlotGLCanvas::BackingStore ) )
     {
+        if ( hasFocusIndicator )
+            painter.begin( this );
+
+        const QRect rect(0, 0, width(), height());
+
         if ( d_data->fbo == NULL || d_data->fbo->size() != size() )
         {
             invalidateBackingStore();
@@ -152,31 +157,11 @@ void QwtPlotGLCanvas::paintGL()
 
             d_data->fbo = new QGLFramebufferObject( size() );
 
-            QRect rect(0, 0, width(), height());
             QGLFramebufferObject::blitFramebuffer(d_data->fbo, rect, &fbo, rect);
         }
 
-        // drawTexture( QRectF( -1.0, 1.0, 2.0, -2.0 ), d_data->fbo->texture() );
+		QGLFramebufferObject::blitFramebuffer( NULL, rect, d_data->fbo, rect );
 
-        if ( hasFocusIndicator )
-            painter.begin( this );
-        
-        glBindTexture(GL_TEXTURE_2D, d_data->fbo->texture());
-        
-        glEnable(GL_TEXTURE_2D);
-        
-        glBegin(GL_QUADS);
-        
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex2f(-1.0f, -1.0f);
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex2f( 1.0f, -1.0f);
-        glTexCoord2f(1.0f, 1.0f);
-        glVertex2f( 1.0f,  1.0f);
-        glTexCoord2f(0.0f, 1.0f);
-        glVertex2f(-1.0f,  1.0f);
-        
-        glEnd();
     }
     else
     {
@@ -185,7 +170,7 @@ void QwtPlotGLCanvas::paintGL()
     }
 #endif
 
-    if ( hasFocus() && focusIndicator() == CanvasFocusIndicator )
+    if ( hasFocusIndicator )
         drawFocusIndicator( &painter );
 }
 
