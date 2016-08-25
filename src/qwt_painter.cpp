@@ -43,8 +43,9 @@
 bool QwtPainter::d_polylineSplitting = true;
 bool QwtPainter::d_roundingAlignment = true;
 
-static bool qwtIsRasterPaintEngineBuggy()
+static inline bool qwtIsRasterPaintEngineBuggy()
 {
+#if 0
     static int isBuggy = -1; 
     if ( isBuggy < 0 )
     {
@@ -68,6 +69,19 @@ static bool qwtIsRasterPaintEngineBuggy()
     }
 
     return isBuggy == 1;
+#endif
+
+#if QT_VERSION < 0x040800
+	return false;
+#elif QT_VERSION < 0x050000
+	return true;
+#elif QT_VERSION < 0x050100
+	return false;
+#elif QT_VERSION < 0x050400
+	return true;
+#else
+	return false;
+#endif
 }
 
 static inline bool qwtIsClippingNeeded( 
@@ -111,13 +125,11 @@ static inline void qwtDrawPolyline( QPainter *painter,
 
                     doSplit = true;
                 }
-#else
-                // all version < 4.8 don't have the bug for
-                // short lines below 2 pixels difference
+#endif
+                // work around a bug with short lines below 2 pixels difference
                 // in height and width
 
                 doSplit = qwtIsRasterPaintEngineBuggy();
-#endif
             }
             else
             {
@@ -217,6 +229,7 @@ static inline void qwtUnscaleFont( QPainter *painter )
 */
 bool QwtPainter::isX11GraphicsSystem()
 {
+#if QT_VERSION < 0x050000
     static int onX11 = -1;
     if ( onX11 < 0 )
     {
@@ -227,6 +240,11 @@ bool QwtPainter::isX11GraphicsSystem()
     }
 
     return onX11 == 1;
+#else
+    // the X11 paint engine has been removed with Qt5 - so sad, as it was
+    // the best available graphic system around: no bugs + hardware accelerated.
+	return false;
+#endif
 }
 
 /*!
