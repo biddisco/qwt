@@ -114,6 +114,12 @@ void QwtPlotGLCanvas::invalidateBackingStore()
     d_data->fbo = NULL;
 }
 
+void QwtPlotGLCanvas::clearBackingStore()
+{
+    delete d_data->fbo;
+    d_data->fbo = NULL;
+}
+
 QPainterPath QwtPlotGLCanvas::borderPath( const QRect &rect ) const
 {
     return borderPath2( rect );
@@ -143,7 +149,7 @@ void QwtPlotGLCanvas::paintGL()
 
         if ( d_data->fbo == NULL || d_data->fbo->size() != size() )
         {
-            invalidateBackingStore();
+			delete d_data->fbo;
 
             QGLFramebufferObjectFormat format;
             format.setSamples( 4 );
@@ -157,7 +163,6 @@ void QwtPlotGLCanvas::paintGL()
         }
 
         QGLFramebufferObject::blitFramebuffer( NULL, rect, d_data->fbo, rect );
-
     }
     else
     {
@@ -172,5 +177,5 @@ void QwtPlotGLCanvas::paintGL()
 
 void QwtPlotGLCanvas::resizeGL( int, int )
 {
-    invalidateBackingStore();
+    // nothing to do
 }

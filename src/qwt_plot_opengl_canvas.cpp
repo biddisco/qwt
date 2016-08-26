@@ -17,6 +17,7 @@ class QwtPlotOpenGLCanvas::PrivateData
 {
 public:
     PrivateData():
+        fboDirty( true ),
         fbo( NULL )
     {
     }
@@ -27,6 +28,8 @@ public:
     }
 
     int numSamples;
+
+    bool fboDirty;
     QOpenGLFramebufferObject* fbo;
 };
 
@@ -112,7 +115,11 @@ void QwtPlotOpenGLCanvas::replot()
 
 void QwtPlotOpenGLCanvas::invalidateBackingStore()
 {
-    // happens for each replot -> better set a flag only
+    d_data->fboDirty = true;
+}
+
+void QwtPlotOpenGLCanvas::clearBackingStore()
+{
     delete d_data->fbo;
     d_data->fbo = NULL;
 }
@@ -134,26 +141,36 @@ void QwtPlotOpenGLCanvas::paintGL()
     if ( testPaintAttribute( QwtPlotOpenGLCanvas::BackingStore ) &&
         QOpenGLFramebufferObject::hasOpenGLFramebufferBlit() )
     {
-        // does this mode make any sense - QOpenGLWidget has its own internal FBO
+        // does this mode make any sense - QOpenGLWidget has its own internal FBO ???
 
-        if ( d_data->fbo == NULL || d_data->fbo->size() != size() )
+        if ( d_data->fbo && d_data->fbo->size() != size() )
         {
-            invalidateBackingStore();
+            delete d_data->fbo;
+            d_data->fbo = NULL;
+        }
 
+        if ( d_data->fbo == NULL )
+        {
             QOpenGLFramebufferObjectFormat fboFormat;
             fboFormat.setSamples( d_data->numSamples );
             fboFormat.setAttachment( QOpenGLFramebufferObject::CombinedDepthStencil );
 
             d_data->fbo = new QOpenGLFramebufferObject( size(), fboFormat );
+            d_data->fboDirty = true;
+        }
+
+        if ( d_data->fboDirty )
+        {
+            d_data->fbo->bind();
 
             QOpenGLPaintDevice pd( size() );
 
             QPainter fboPainter( &pd );
             draw( &fboPainter);
             fboPainter.end();
+        
+            d_data->fboDirty = false;
         }
-
-        makeCurrent();
 
         QOpenGLFramebufferObject::blitFramebuffer( NULL, d_data->fbo );
 
@@ -175,5 +192,5 @@ void QwtPlotOpenGLCanvas::paintGL()
 
 void QwtPlotOpenGLCanvas::resizeGL( int, int )
 {
-    invalidateBackingStore();
+    // nothing to do
 }
