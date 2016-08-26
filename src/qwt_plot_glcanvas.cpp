@@ -16,6 +16,7 @@ class QwtPlotGLCanvas::PrivateData
 {
 public:
     PrivateData():
+        fboDirty( true ),
         fbo( NULL )
     {
     }
@@ -25,6 +26,7 @@ public:
         delete fbo;
     }
 
+    bool fboDirty;
     QGLFramebufferObject* fbo;
 };
 
@@ -110,8 +112,7 @@ void QwtPlotGLCanvas::replot()
 
 void QwtPlotGLCanvas::invalidateBackingStore()
 {
-    delete d_data->fbo;
-    d_data->fbo = NULL;
+    d_data->fboDirty = true;
 }
 
 void QwtPlotGLCanvas::clearBackingStore()
@@ -147,19 +148,29 @@ void QwtPlotGLCanvas::paintGL()
 
         const QRect rect(0, 0, width(), height());
 
+        if ( d_data->fbo && d_data->fbo->size() != size() )
+        {
+            delete d_data->fbo;
+            d_data->fbo = NULL;
+        }
+
         if ( d_data->fbo == NULL || d_data->fbo->size() != size() )
         {
-			delete d_data->fbo;
-
             QGLFramebufferObjectFormat format;
             format.setSamples( 4 );
             format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
 
             d_data->fbo = new QGLFramebufferObject( size(), format );
+            d_data->fboDirty = true;
+        }
 
+        if ( d_data->fboDirty )
+        {
             QPainter fboPainter( d_data->fbo );
             draw( &fboPainter);
             fboPainter.end();
+
+            d_data->fboDirty = false;
         }
 
         QGLFramebufferObject::blitFramebuffer( NULL, rect, d_data->fbo, rect );
