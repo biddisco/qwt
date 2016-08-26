@@ -138,9 +138,14 @@ void QwtPlotOpenGLCanvas::paintGL()
     const bool hasFocusIndicator = 
         hasFocus() && focusIndicator() == CanvasFocusIndicator;
 
+    QPainter painter;
+
     if ( testPaintAttribute( QwtPlotOpenGLCanvas::BackingStore ) &&
         QOpenGLFramebufferObject::hasOpenGLFramebufferBlit() )
     {
+        if ( hasFocusIndicator )
+            painter.begin( this );
+
         // does this mode make any sense - QOpenGLWidget has its own internal FBO ???
 
         if ( d_data->fbo && d_data->fbo->size() != size() )
@@ -173,21 +178,15 @@ void QwtPlotOpenGLCanvas::paintGL()
         }
 
         QOpenGLFramebufferObject::blitFramebuffer( NULL, d_data->fbo );
-
-        if ( hasFocusIndicator )
-        {
-            QPainter painter( this );
-            drawFocusIndicator( &painter );
-        }
     }
     else
     {
-        QPainter painter( this );
+        painter.begin( this );
         draw( &painter );
-
-        if ( hasFocusIndicator )
-            drawFocusIndicator( &painter );
     }
+
+    if ( hasFocusIndicator )
+        drawFocusIndicator( &painter );
 }
 
 void QwtPlotOpenGLCanvas::resizeGL( int, int )
