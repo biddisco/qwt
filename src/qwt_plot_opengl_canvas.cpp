@@ -17,6 +17,7 @@ class QwtPlotOpenGLCanvas::PrivateData
 {
 public:
     PrivateData():
+        isPolished( false ),
         fboDirty( true ),
         fbo( NULL )
     {
@@ -29,6 +30,7 @@ public:
 
     int numSamples;
 
+    bool isPolished;
     bool fboDirty;
     QOpenGLFramebufferObject* fbo;
 };
@@ -83,7 +85,8 @@ QwtPlotOpenGLCanvas::~QwtPlotOpenGLCanvas()
 */
 void QwtPlotOpenGLCanvas::paintEvent( QPaintEvent *event )
 {
-    QOpenGLWidget::paintEvent( event );
+    if ( d_data->isPolished )
+        QOpenGLWidget::paintEvent( event );
 }
 
 /*!
@@ -94,6 +97,15 @@ void QwtPlotOpenGLCanvas::paintEvent( QPaintEvent *event )
 bool QwtPlotOpenGLCanvas::event( QEvent *event )
 {
     const bool ok = QOpenGLWidget::event( event );
+
+    if ( event->type() == QEvent::PolishRequest )
+    {
+        // In opposite to non OpenGL widgets receive pointless
+        // early repaints. As we always have a QEvent::PolishRequest
+        // followed by QEvent::Paint, we can ignore all thos repaints.
+
+        d_data->isPolished = true;
+    }
 
     if ( event->type() == QEvent::PolishRequest ||
         event->type() == QEvent::StyleChange )
@@ -146,7 +158,15 @@ void QwtPlotOpenGLCanvas::paintGL()
         if ( hasFocusIndicator )
             painter.begin( this );
 
-        // does this mode make any sense - QOpenGLWidget has its own internal FBO ???
+        /*
+           QOpenGLWidget has its own internal FBO, that is used to restore
+           its content without having to repaint. This works fine when f.e
+           a rubberband is moving on top, but there are still situations,
+           where we can repaint without an potentially expensive replot: 
+
+               - when having the focus the top level window gets activated/deactivated
+               - ???
+         */
 
         if ( d_data->fbo && d_data->fbo->size() != size() )
         {
