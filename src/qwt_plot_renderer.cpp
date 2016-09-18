@@ -27,10 +27,28 @@
 #include <qstyle.h>
 #include <qstyleoption.h>
 #include <qimagewriter.h>
+
 #ifndef QWT_NO_SVG
 #ifdef QT_SVG_LIB
-#include <qsvggenerator.h>
+#if QT_VERSION >= 0x040500
+#define QWT_FORMAT_SVG 1
 #endif
+#endif
+#endif
+
+#ifndef QT_NO_PRINTER
+#define QWT_FORMAT_PDF 1
+#endif
+
+#ifndef QT_NO_PRINTER
+// postscript support has been dropped in Qt5
+#if QT_VERSION < 0x050000
+#define QWT_FORMAT_POSTSCRIPT 1
+#endif
+#endif
+
+#if QWT_FORMAT_SVG
+#include <qsvggenerator.h>
 #endif
 
 static QPainterPath qwtCanvasClip( 
@@ -240,7 +258,7 @@ void QwtPlotRenderer::renderDocument( QwtPlot *plot,
     const QString fmt = format.toLower();
     if ( fmt == "pdf" )
     {
-#ifndef QT_NO_PRINTER
+#if QWT_FORMAT_PDF
         QPrinter printer;
         printer.setOutputFormat( QPrinter::PdfFormat );
         printer.setColorMode( QPrinter::Color );
@@ -256,8 +274,7 @@ void QwtPlotRenderer::renderDocument( QwtPlot *plot,
     }
     else if ( fmt == "ps" )
     {
-#if QT_VERSION < 0x050000
-#ifndef QT_NO_PRINTER
+#if QWT_FORMAT_POSTSCRIPT
         QPrinter printer;
         printer.setOutputFormat( QPrinter::PostScriptFormat );
         printer.setColorMode( QPrinter::Color );
@@ -270,13 +287,10 @@ void QwtPlotRenderer::renderDocument( QwtPlot *plot,
         QPainter painter( &printer );
         render( plot, &painter, documentRect );
 #endif
-#endif
     }
     else if ( fmt == "svg" )
     {
-#ifndef QWT_NO_SVG
-#ifdef QT_SVG_LIB
-#if QT_VERSION >= 0x040500
+#if QWT_FORMAT_SVG
         QSvgGenerator generator;
         generator.setTitle( title );
         generator.setFileName( fileName );
@@ -285,8 +299,6 @@ void QwtPlotRenderer::renderDocument( QwtPlot *plot,
 
         QPainter painter( &generator );
         render( plot, &painter, documentRect );
-#endif
-#endif
 #endif
     }
     else
@@ -366,9 +378,7 @@ void QwtPlotRenderer::renderTo(
 
 #endif
 
-#ifndef QWT_NO_SVG
-#ifdef QT_SVG_LIB
-#if QT_VERSION >= 0x040500
+#if QWT_FORMAT_SVG
 
 /*!
   \brief Render the plot to a QSvgGenerator
@@ -394,8 +404,7 @@ void QwtPlotRenderer::renderTo(
     QPainter p( &generator );
     render( plot, &p, rect );
 }
-#endif
-#endif
+
 #endif
 
 /*!
@@ -975,13 +984,13 @@ bool QwtPlotRenderer::exportTo( QwtPlot *plot, const QString &documentName,
         QImageWriter::supportedImageFormats();
         
     QStringList filter;
-#ifndef QT_NO_PRINTER
+#if QWT_FORMAT_PDF
     filter += QString( "PDF " ) + tr( "Documents" ) + " (*.pdf)";
 #endif
-#ifndef QWT_NO_SVG 
+#if QWT_FORMAT_SVG
     filter += QString( "SVG " ) + tr( "Documents" ) + " (*.svg)";
 #endif
-#ifndef QT_NO_PRINTER
+#if QWT_FORMAT_POSTSCRIPT
     filter += QString( "Postscript " ) + tr( "Documents" ) + " (*.ps)";
 #endif
     
