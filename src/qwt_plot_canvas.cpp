@@ -450,9 +450,10 @@ QImage QwtPlotCanvas::toImageFBO( const QSize &size )
     
     painter.end();
 
-	QImage image = fbo.toImage();
+    QImage image = fbo.toImage();
+
 #if QT_VERSION >= 0x050000
-	image.setDevicePixelRatio( devicePixelRatioF() );
+    image.setDevicePixelRatio( QwtPainter::devicePixelRatio( this ) );
 #endif
     return image;
 }
