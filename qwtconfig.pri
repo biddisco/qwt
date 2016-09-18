@@ -93,13 +93,17 @@ QWT_CONFIG     += QwtWidgets
 # export a plot to a SVG document
 ######################################################################
 
-QWT_CONFIG     += QwtSvg
+contains(QT_CONFIG, svg ) {
+    QWT_CONFIG     += QwtSvg
+}
 
 ######################################################################
 # If you want to use a OpenGL plot canvas
 ######################################################################
 
-QWT_CONFIG     += QwtOpenGL
+contains(QT_CONFIG, opengl ) {
+    QWT_CONFIG     += QwtOpenGL
+}
 
 ######################################################################
 # You can use the MathML renderer of the Qt solutions package to 
