@@ -17,6 +17,9 @@ SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY
 set(BUILD_SHARED_LIBS OFF)
 
 find_package(OpenGL)
+if (APPLE) 
+  add_definitions(-DQWT_NO_OPENGL)
+endif()
 
 find_package(Qt5Core)
 find_package(Qt5Widgets)
