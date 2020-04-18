@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(qwt)
 
+cmake_policy(SET CMP0072 NEW)
+
 #--------------------------------------------------
 # Setup Output directories
 #--------------------------------------------------
