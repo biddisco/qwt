@@ -883,13 +883,13 @@ void QwtPlotRenderer::renderCanvas( const QwtPlot *plot,
     {
         QPainterPath clipPath;
 
-        int frameWidth = 0;
+        double frameWidth = 0.0;
 
         if ( !( d_data->discardFlags & DiscardCanvasFrame ) )
         {
             const QVariant fw = canvas->property( "frameWidth" );
-            if ( fw.type() == QVariant::Int )
-                frameWidth = fw.toInt();
+            if ( fw.canConvert< double >() )
+                frameWidth = fw.value< double >();
 
             clipPath = qwtCanvasClip( canvas, canvasRect );
         }
@@ -926,10 +926,10 @@ void QwtPlotRenderer::renderCanvas( const QwtPlot *plot,
                 canvas->property( "frameShape" ).toInt();
 
             const QVariant borderRadius = canvas->property( "borderRadius" );
-            if ( borderRadius.type() == QVariant::Double
-                && borderRadius.toDouble() > 0.0 )
+            if ( borderRadius.canConvert< double >()
+                && borderRadius.value< double >() > 0.0 )
             {
-                const double radius = borderRadius.toDouble();
+                const double radius = borderRadius.value< double >();
 
                 QwtPainter::drawRoundedFrame( painter, canvasRect,
                     radius, radius, canvas->palette(), frameWidth, frameStyle );
