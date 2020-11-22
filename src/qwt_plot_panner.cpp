@@ -80,11 +80,10 @@ static QBitmap qwtBorderMask( const QWidget *canvas, const QSize &size )
         const QVariant borderRadius = canvas->property( "borderRadius" );
         const QVariant frameWidth = canvas->property( "frameWidth" );
 
-        if ( borderRadius.type() == QVariant::Double
-            && frameWidth.type() == QVariant::Int )
+        if ( borderRadius.canConvert< double >() && frameWidth.canConvert< int >() )
         {
-            const double br = borderRadius.toDouble();
-            const int fw = frameWidth.toInt();
+            const double br = borderRadius.value< double >();
+            const int fw = frameWidth.value< int >();
 
             if ( br > 0.0 && fw > 0 )
             {

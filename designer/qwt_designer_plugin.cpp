@@ -558,11 +558,11 @@ QAction *TaskMenuExtension::preferredEditAction() const
 void TaskMenuExtension::editProperties()
 {
     const QVariant v = d_widget->property( "propertiesDocument" );
-    if ( v.type() != QVariant::String )
+    if ( !v.canConvert< QString >() )
         return;
 
 #ifndef NO_QWT_PLOT
-    QString properties = v.toString();
+    const QString properties = v.value< QString >();
 
     if ( qobject_cast<QwtPlot*>( d_widget ) )
     {
