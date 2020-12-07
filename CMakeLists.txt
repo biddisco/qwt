@@ -23,21 +23,16 @@ if (APPLE)
   add_definitions(-DQWT_NO_OPENGL)
 endif()
 
-find_package(Qt5Core)
-find_package(Qt5Widgets)
-find_package(Qt5Gui)
-find_package(Qt5Svg)
-find_package(Qt5OpenGL)
-find_package(Qt5Concurrent)
-find_package(Qt5PrintSupport)
-
-set(CMAKE_AUTOMOC ON)
+find_package(Qt5 REQUIRED QUIET COMPONENTS Core Widgets Gui OpenGL PrintSupport Svg Concurrent)
 
 include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}/class_includes
+  ${CMAKE_CURRENT_SOURCE_DIR}/classincludes
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${CMAKE_CURRENT_SOURCE_DIR}/textengines/mathml
 )
 
 add_subdirectory(src)
+add_subdirectory(textengines/mathml)
 
 option(QWT_BUILD_EXAMPLES ON)
 if (QWT_BUILD_EXAMPLES)

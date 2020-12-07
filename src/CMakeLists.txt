@@ -9,7 +9,6 @@
 # modify it under the terms of the Qwt License, Version 1.0
 ################################################################
 
-
 set(Qwt_HEADERS
     qwt.h
     qwt_abstract_scale_draw.h
@@ -82,6 +81,20 @@ set(Qwt_SOURCES
     qwt_picker_machine.cpp
     qwt_pixel_matrix.cpp
     qwt_point_3d.cpp
+    qwt_polar_canvas.cpp
+    qwt_polar_curve.cpp
+    qwt_polar_fitter.cpp
+    qwt_polar_grid.cpp
+    qwt_polar_item.cpp
+    qwt_polar_itemdict.cpp
+    qwt_polar_layout.cpp
+    qwt_polar_magnifier.cpp
+    qwt_polar_marker.cpp
+    qwt_polar_panner.cpp
+    qwt_polar_picker.cpp
+    qwt_polar_plot.cpp
+    qwt_polar_renderer.cpp
+    qwt_polar_spectrogram.cpp
     qwt_point_polar.cpp
     qwt_round_scale_draw.cpp
     qwt_scale_div.cpp
@@ -96,6 +109,7 @@ set(Qwt_SOURCES
     qwt_spline_pleasing.cpp
     qwt_symbol.cpp
     qwt_system_clock.cpp
+    qwt_plot_textlabel.cpp
     qwt_text_engine.cpp
     qwt_text_label.cpp
     qwt_text.cpp
@@ -228,7 +242,6 @@ set(QwtSvg_SOURCES
         qwt_plot_svgitem.cpp
 )
 
-
 set(QwtWidgets_HEADERS
         qwt_abstract_slider.h
         qwt_abstract_scale.h
@@ -261,13 +274,9 @@ set(QwtWidgets_SOURCES
         qwt_wheel.cpp
 )
 
-#qt5_wrap_cpp(QWT_SRCS ${QWT_HDRS})
+find_package(Qt5 REQUIRED QUIET COMPONENTS Core Widgets Gui OpenGL PrintSupport Svg Concurrent)
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
-
-add_library(qwt
+add_library(qwt SHARED
     ${Qwt_SOURCES}
     ${QwtPlot_SOURCES}
     ${QwtOpenGL_SOURCES}
@@ -275,8 +284,14 @@ add_library(qwt
     ${QwtWidgets_SOURCES}
 )
 
-target_link_libraries(qwt PRIVATE ${OPENGL_LIBRARIES})
-target_link_libraries(qwt PUBLIC
+# important to have QWT_MOC_INCLUDE=1 for correct linking
+target_compile_definitions(qwt PRIVATE QWT_DLL QT_STRICT_ITERATORS QWT_MOC_INCLUDE=1)
+
+# cmake will do the moc generation for us
+set_property(TARGET qwt PROPERTY AUTOMOC ON)
+
+target_link_libraries(qwt PRIVATE
+    ${OPENGL_LIBRARIES}
     Qt5::Core
     Qt5::Widgets
     Qt5::Gui
@@ -285,3 +300,4 @@ target_link_libraries(qwt PUBLIC
     Qt5::Svg
     Qt5::Concurrent
 )
+
