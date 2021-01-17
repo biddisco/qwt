@@ -284,11 +284,14 @@ add_library(qwt SHARED
     ${QwtWidgets_SOURCES}
 )
 
-# important to have QWT_MOC_INCLUDE=1 for correct linking
-target_compile_definitions(qwt PRIVATE QWT_DLL QT_STRICT_ITERATORS QWT_MOC_INCLUDE=1)
-
 # cmake will do the moc generation for us
 set_property(TARGET qwt PROPERTY AUTOMOC ON)
+
+# make sure main include directory is picked up by dependent targets
+target_include_directories(qwt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# important to have QWT_MOC_INCLUDE=1 for correct linking
+target_compile_definitions(qwt PRIVATE QWT_DLL QT_STRICT_ITERATORS QWT_MOC_INCLUDE=1)
 
 target_link_libraries(qwt PRIVATE
     ${OPENGL_LIBRARIES}
