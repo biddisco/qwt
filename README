@@ -1,3 +1,39 @@
+CMake integration
+-----------------
+
+I just use this in my CMakeLists for a project that needs qwt
+
+# ------------------------------------------------------------------------------
+# Build/Download qwt                                                                                                                                                                         
+# ------------------------------------------------------------------------------
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/qwt)
+  message(STATUS "Using QWT in source tree")
+  set(FETCHCONTENT_SOURCE_DIR_QWT ${CMAKE_CURRENT_SOURCE_DIR}/qwt)
+  set(FETCHCONTENT_UPDATES_DISCONNECTED_QWT ON) 
+endif()
+
+fetchcontent_declare(
+  qwt 
+  GIT_REPOSITORY https://github.com/biddisco/qwt.git
+  GIT_TAG develop-cmake
+)
+fetchcontent_getproperties(qwt)
+if(NOT qwt_POPULATED)
+  fetchcontent_populate(qwt)
+  add_subdirectory(${qwt_SOURCE_DIR} ${qwt_BINARY_DIR})
+endif()
+
+# ... then later in the CMakeLists
+
+target_link_libraries(
+  my_application
+  PUBLIC qwt
+)
+
+
+---------------------------------
+Original README follows from here
+---------------------------------
 
 The Qwt Widget Library
 ----------------------
